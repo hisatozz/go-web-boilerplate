@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Go Web API boilerplate</title>
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+    <link rel="stylesheet" href="assets/normalize.min.css" type="text/css" media="screen" charset="utf-8">
+    <link rel="stylesheet" href="assets/milligram.min.css" type="text/css" media="screen" charset="utf-8">
+    <link rel="stylesheet" href="assets/style.css" type="text/css" media="screen" charset="utf-8">
+
+    <script defer src="assets/axios.min.js"></script>
+  </head>
+  <body>
+    <h1>
+      Go Web API boilerplate
+    </h1>
+    
+    <p id="githubName"></p>
+    <ul>
+      <li><a href="//www.local.test">www.local.test</a>(Allowed origin)</li>
+      <li><a href="//www2.local.test">www2.local.test</a>(Not Allowed origin)</li>
+      <li><a href="/hello/John Titor">Say hello to John</a></li>
+      <li id="login" class="public"><a href="/login">Login with github</a></li>
+      <li id="logout" class="private"><a href="#">logout</a></li>
+    </ul>
+
+    <hr>
+    
+    <p>
+      /api/hello GET result
+    </p>
+    <pre class="get">
+    </pre>
+
+    <hr>
+
+    <p>
+      /api/hello PUT result
+    </p>
+    <pre class="put">
+    </pre>
+    <hr>
+
+    <div class="private">
+      <p>/api/private/hello result</p>
+      <pre></pre>
+    </div>
+
+    <script>
+  // This code should blocked by CSP
+      alert('inline script executed!');
+    </script>
+
+    <hr>
+    <p>
+      <script src="/assets/site.js"></script>
+    </p>
+
+  </body>
+</html>

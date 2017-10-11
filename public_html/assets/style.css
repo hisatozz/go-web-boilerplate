@@ -1,0 +1,17 @@
+
+a {
+	color: #4d76ca;
+}
+
+a:visited {
+	color: #47c3e4;
+}
+
+body {
+	background-color: #f5f5f5;
+	padding: 1em;
+}
+
+.private {
+	visibility: hidden;
+}

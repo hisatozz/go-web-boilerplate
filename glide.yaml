@@ -1,0 +1,17 @@
+package: github.com/hisatozz/boiler
+import:
+- package: github.com/antonholmquist/jason
+  version: ~1.0.0
+- package: github.com/codegangsta/negroni
+  version: ~0.2.0
+- package: github.com/julienschmidt/httprouter
+  version: ~1.1.0
+- package: github.com/rs/cors
+  version: ~1.2.0
+- package: github.com/sirupsen/logrus
+  version: ~1.0.3
+- package: golang.org/x/oauth2
+  subpackages:
+  - github
+- package: gopkg.in/unrolled/secure.v1
+- package: gopkg.in/yaml.v2

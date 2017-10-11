@@ -1,0 +1,8 @@
+{
+  "libs": [
+    "browser"
+  ],
+  "loadEagerly": [
+	"public_html/assets/*.js"
+  ]
+}

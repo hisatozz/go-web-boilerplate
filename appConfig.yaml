@@ -1,0 +1,9 @@
+oauthClientId: 6d9b6d9e295517d2a77f
+oauthClientSecret: 5803b4a2b4f50cf118086a919ef17baae93861ea
+
+# hmac key
+key: randomkey
+redirectUrl: http://www.local.test/oauth-redirect
+
+# TTL of oauth state in minutes
+stateTokenTTL: 10
