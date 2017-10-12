@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			console.log(re.data);
 			localStorage.setItem("token", re.data.token);
 			localStorage.setItem("githubName", re.data.githubName);
+			localStorage.setItem("expire", re.data.expire);
 			location.href = "/";
 		}).catch( (err) => {
 			console.error(err);

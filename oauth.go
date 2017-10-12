@@ -60,70 +60,76 @@ func oauthRedirectHandler(w http.ResponseWriter, r *http.Request, ps httprouter.
 func (sv *WebApp) tokenExchangeAPI() httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-		var state, code, loginname, token string
-		var jsData *jason.Object
-		var githubToken *oauth2.Token
-		var client *http.Client
-		var resp *http.Response
-		var err error
-		var user *jason.Object
-		var uid UID
+		err := func() error {
+			var state, code, loginname, token string
+			var jsData *jason.Object
+			var githubToken *oauth2.Token
+			var client *http.Client
+			var resp *http.Response
+			var err error
+			var user *jason.Object
+			var uid UID
 
-		// read json
-		jsData, err = jason.NewObjectFromReader(io.LimitReader(r.Body, 1024))
+			// read json
+			jsData, err = jason.NewObjectFromReader(io.LimitReader(r.Body, 1024))
+			if err != nil {
+				return err
+			}
+
+			state, err = jsData.GetString("state")
+			log.Debugf("tokenExchangeAPI() state: %s", state)
+
+			code, err = jsData.GetString("code")
+			log.Debugf("code: %s", code)
+
+			if err != nil {
+				return err
+			}
+
+			// 1. check state token
+
+			err = sv.checkStateToken(state)
+			if err != nil {
+				return err
+			}
+
+			// 2. get github user data
+
+			githubToken, err = sv.oauth2Config.Exchange(r.Context(), code)
+			if err != nil {
+				log.Infof("tokenExchangeAPI(): Error in Exchange. %v", err)
+				return err
+			}
+			log.Debug(githubToken)
+			client = sv.oauth2Config.Client(r.Context(), githubToken)
+			resp, err = client.Get("https://api.github.com/user")
+			if err != nil {
+				log.Infof("tokenExchangeAPI(): Error in get /user. %v", err)
+				return err
+			}
+
+			// make response
+			user, _ = jason.NewObjectFromReader(resp.Body)
+			loginname, _ = user.GetString("login")
+
+			log.Debug(loginname)
+
+			uid = getUserIDByGithubName(loginname)
+			token, createdTime := sv.generateToken(uid)
+			expire := createdTime.Add(time.Duration(sv.appConfig.TokenTTL) * time.Minute)
+			log.Debugf("created: %s, expire: %s", createdTime.Format(time.RFC3339), expire.Format(time.RFC3339))
+
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprintf(w, `{"token": "%s", "githubName":"%s", "expire": "%s"}`, token, loginname, expire.Format("2006-01-02T15:04:05-0700"))
+
+			return err
+		}()
 		if err != nil {
-			goto AUTH_ERR
+			w.WriteHeader(422)
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprintf(w, `{"type":"Authentication Error", "message":"%s"}`, err)
+
 		}
-
-		state, err = jsData.GetString("state")
-		log.Debugf("tokenExchangeAPI() state: %s", state)
-
-		code, err = jsData.GetString("code")
-		log.Debugf("code: %s", code)
-
-		if err != nil {
-			goto AUTH_ERR
-		}
-
-		// 1. check state token
-
-		err = sv.checkStateToken(state)
-		if err != nil {
-			goto AUTH_ERR
-		}
-
-		// 2. get github user data
-
-		githubToken, err = sv.oauth2Config.Exchange(r.Context(), code)
-		if err != nil {
-			log.Infof("tokenExchangeAPI(): Error in Exchange. %v", err)
-			goto AUTH_ERR
-		}
-		log.Debug(githubToken)
-		client = sv.oauth2Config.Client(r.Context(), githubToken)
-		resp, err = client.Get("https://api.github.com/user")
-		if err != nil {
-			log.Infof("tokenExchangeAPI(): Error in get /user. %v", err)
-			goto AUTH_ERR
-		}
-
-		// make response
-		user, _ = jason.NewObjectFromReader(resp.Body)
-		loginname, _ = user.GetString("login")
-
-		log.Debug(loginname)
-
-		uid = getUserIDByGithubName(loginname)
-		token = sv.generateToken(uid)
-
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"token": "%s", "githubName":"%s"}`, token, loginname)
-
-		return
-	AUTH_ERR:
-		w.WriteHeader(422)
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"type":"Authentication Error", "message":"%s"}`, err)
 
 	}
 
@@ -172,7 +178,7 @@ func (sv *WebApp) checkStateToken(state string) error {
  * Next sizeof(UID) is userid.
  * Last 32 bytes are hmac.
  */
-func (sv *WebApp) generateToken(uid UID) string {
+func (sv *WebApp) generateToken(uid UID) (string, time.Time) {
 	buf := new(bytes.Buffer)
 
 	created := time.Now().Unix()
@@ -186,7 +192,7 @@ func (sv *WebApp) generateToken(uid UID) string {
 	buf.Write(hm)
 	log.Debugf("generateToken() token: %x", buf.Bytes())
 
-	return fmt.Sprintf("%x", buf.Bytes())
+	return fmt.Sprintf("%x", buf.Bytes()), time.Unix(created, 0)
 }
 
 // check token by hmac and expiration time
@@ -213,7 +219,7 @@ func (sv *WebApp) checkToken(tokenStr string) error {
 	dur := now.Sub(createdTime)
 	durInt := int(dur.Minutes())
 
-	if durInt > sv.appConfig.StateTokenTTL {
+	if durInt > sv.appConfig.TokenTTL {
 		return fmt.Errorf("login expired. %s", tokenStr)
 	}
 

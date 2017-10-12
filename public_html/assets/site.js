@@ -14,6 +14,21 @@ function disp(element, obj) {
 }
 
 /**
+ * Check login expiration
+ */
+let token = localStorage.getItem("token");
+if(token){
+	let expireStr = localStorage.getItem("expire");
+	let expireDate = new Date(expireStr);
+	let now = Date.now();
+	let expire = expireDate.getTime();
+	if(expire - now < 0){
+		localStorage.removeItem("token");
+	}
+}
+
+
+/**
  * call hello API GET, PUT and private method
  **/
 document.addEventListener("DOMContentLoaded", () => {

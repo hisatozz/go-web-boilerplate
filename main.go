@@ -18,7 +18,7 @@ type AplicationConfig struct {
 	OauthClientSecret string `yaml:"oauthClientSecret"`
 	RedirectUrl       string `yaml:"redirectUrl"`
 	Key               string `yaml:"key"`
-	StateTokenTTL     int    `yaml:"stateTokenTTL"`
+	TokenTTL          int    `yaml:"tokenTTL"`
 }
 
 func readConfig(filename string) (*AplicationConfig, error) {

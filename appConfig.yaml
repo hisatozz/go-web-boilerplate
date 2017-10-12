@@ -6,4 +6,4 @@ key: randomkey
 redirectUrl: http://www.local.test/oauth-redirect
 
 # TTL of oauth state in minutes
-stateTokenTTL: 10
+tokenTTL: 10
